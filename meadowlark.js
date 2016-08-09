@@ -1,5 +1,10 @@
+// Get dependencies
 var express = require('express');
 
+// ./ This signals to Node that it should not look for the module in the node_modules directory
+var fortune = require('./lib/fortune.js');
+
+// Define express
 var app = express();
 
 // Set up handlebars view engine
@@ -20,17 +25,8 @@ app.get('/', function (request, response) {
 	response.render('home');
 });
 
-var fortunes = [
-	"Conquer your fears or they will conquer you.",
-	"Rivers need springs.",
-	"Do not fear what you don't know.",
-	"You will have a pleasant surprise.",
-	"Whenever possible, keep it simple."
-];
-
 app.get('/about', function (request, response) {
-	var randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-	response.render('about', { fortune: randomFortune });
+	response.render('about', { fortune: fortune.getFortune() });
 });
 
 // Express can distinguish between the 404 and 500 handlers by the 
