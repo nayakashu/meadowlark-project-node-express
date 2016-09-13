@@ -1,11 +1,16 @@
-// Get dependencies
+// Get express dependency
 var express = require('express');
+// Define express
+var app = express();
 
+// Get fortune.js dependency
 // ./ This signals to Node that it should not look for the module in the node_modules directory
 var fortune = require('./lib/fortune.js');
 
-// Define express
-var app = express();
+// Get body-parser dependency
+var bodyParser = require('body-parser');
+// Set the dependency in the express app
+app.use(bodyParser());
 
 // Set up handlebars view engine
 var handlebars = require('express3-handlebars').create({ 
@@ -21,12 +26,11 @@ var handlebars = require('express3-handlebars').create({
 		}
 	}
 });
-
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('view cache', true);
 
-// Set the app port for the server
+// Set the express app port for the server
 app.set('port', process.env.PORT || 3000);
 
 // Set up middleware to detect test=1 in querystring to activate mocha tests in the pages
@@ -100,6 +104,39 @@ app.get('/jquery-test', function (request, response) {
 	response.render('jquery-test');
 });
 
+// Newsletter subscription page
+app.get('/newsletter', function (request, response) {
+	// we will learn about CSRF later... for now, we just
+	// provide a dummy value
+	response.render('newsletter', {
+		csrf: 'CSRF token goes here'
+	});
+});
+
+// Newsletter form POST handling
+
+// non-AJAX form 
+app.post('/process-non-ajax', function (request, response) {
+	console.log('Form (from querystring): ' + request.query.form);
+	console.log('CSRF token (from hidden form field): ' + request.body._csrf);
+	console.log('Name (from visible form field): ' + request.body.name);
+	console.log('Email (from visible form field): ' + request.body.email);
+	response.redirect(303, '/thank-you');
+});
+
+// AJAX form
+app.post('/process-ajax', function (request, response) {
+	if(request.xhr || requests.accepts('json,html') === 'json') {
+		// if there were an error, we would send { error: 'error description'}
+		response.send({
+			success: true
+		});
+	} else {
+		// if its not an AJAX request, we would redirect to an error page
+		response.redirect(303, '/thank-you');
+	}
+});
+
 // Routes for Cross-Page testing - requires zombie - right now not installing in Windows
 app.get('/tours/hood-river', function (request, response) {
 	response.render('tours/hood-river');
@@ -126,6 +163,7 @@ app.use(function (error, request, response, next) {
 	response.render('500');
 });
 
+// Bind express app to server port
 app.listen(app.get('port'), function () {
 	console.log( 'Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.' );
 });
